@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::state::{Market, Outcome, MarketStatus, PlatformConfig};
+use crate::state::{Market, MarketStatus, PlatformConfig};
 use crate::errors::PredictionMarketError;
 
 pub fn resolve_market(ctx: Context<ResolveMarket>, winning_outcome_id: u8) -> Result<()> {
