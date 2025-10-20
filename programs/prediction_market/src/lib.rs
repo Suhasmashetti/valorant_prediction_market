@@ -5,8 +5,7 @@ pub mod instructions;
 pub mod errors;
 
 use instructions::*;
-use state::*;
-use errors::PredictionMarketError;
+
 
 declare_id!("4asst9oqh9cAryCAViQ2pySSESqP9TLd5nEaz5BJfrxL");
 
