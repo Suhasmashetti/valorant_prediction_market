@@ -1,12 +1,12 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, TokenAccount, Token, TransferChecked};
+use anchor_spl::token::{self, Transfer, TokenAccount, Token, Mint};
 use crate::state::{Market, Outcome, UserPosition, MarketStatus};
 use crate::errors::PredictionMarketError;
 
 pub fn claim_payout(ctx: Context<ClaimPayout>) -> Result<()> {
     let market = &ctx.accounts.market;
     let user_position = &mut ctx.accounts.user_position;
-    let winner_outcome = &ctx.accounts.outcome;
+    let _winner_outcome = &ctx.accounts.outcome;
     
     // Validations
     require!(
@@ -50,12 +50,11 @@ pub fn claim_payout(ctx: Context<ClaimPayout>) -> Result<()> {
         .checked_div(user_share_denominator as u128)
         .ok_or(PredictionMarketError::MathOverflow)? as u64;
     
-    // Transfer tokens from escrow to user using transfer_checked
-    let cpi_accounts = TransferChecked {
+    // Transfer tokens from escrow to user
+    let cpi_accounts = Transfer {
         from: ctx.accounts.escrow_token_account.to_account_info(),
         to: ctx.accounts.user_token_account.to_account_info(),
         authority: ctx.accounts.escrow_authority.to_account_info(),
-        mint: ctx.accounts.mint.to_account_info(),
     };
     
     // Create the CPI context with signer seeds for the escrow PDA
@@ -78,7 +77,7 @@ pub fn claim_payout(ctx: Context<ClaimPayout>) -> Result<()> {
     );
     
     // Execute the transfer
-    token::transfer_checked(cpi_ctx, payout, ctx.accounts.mint.decimals)?;
+    token::transfer(cpi_ctx, payout)?;
     
     // Mark position as claimed
     user_position.claimed = true;
@@ -120,7 +119,7 @@ pub struct ClaimPayout<'info> {
     pub user_position: Account<'info, UserPosition>,
     
     /// The mint of the token being used for payouts
-    pub mint: Account<'info, token::Mint>,
+    pub mint: Account<'info, Mint>,
     
     #[account(
         mut,

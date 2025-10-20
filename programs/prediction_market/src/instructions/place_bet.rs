@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, TokenAccount, Token};
+use anchor_spl::token::{self, Transfer, TokenAccount, Token, Mint};
 use crate::state::{Market, Outcome, UserPosition, MarketStatus};
 use crate::errors::PredictionMarketError;
 
@@ -25,17 +25,16 @@ pub fn place_bet(ctx: Context<PlaceBet>, amount: u64) -> Result<()> {
         PredictionMarketError::InvalidBetAmount
     );
     
-    // Transfer tokens from user to outcome's escrow account using transfer_checked
-    let cpi_accounts = token::TransferChecked {
+    // Transfer tokens from user to outcome's escrow account
+    let cpi_accounts = Transfer {
         from: ctx.accounts.user_token_account.to_account_info(),
         to: ctx.accounts.escrow_token_account.to_account_info(),
         authority: ctx.accounts.user.to_account_info(),
-        mint: ctx.accounts.mint.to_account_info(),
     };
     
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    token::transfer_checked(cpi_ctx, amount, ctx.accounts.mint.decimals)?;
+    token::transfer(cpi_ctx, amount)?;
     
     // Calculate shares based on current odds
     // For simplicity, we'll use a 1:1 ratio initially
@@ -109,7 +108,7 @@ pub struct PlaceBet<'info> {
     pub user_position: Account<'info, UserPosition>,
     
     /// The mint of the token being bet
-    pub mint: Account<'info, token::Mint>,
+    pub mint: Account<'info, Mint>,
     
     #[account(
         mut,

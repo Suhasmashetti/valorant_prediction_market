@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, TokenAccount, Token, TransferChecked};
+use anchor_spl::token::{self, TokenAccount, Token, Transfer};
 use crate::state::PlatformConfig;
 use crate::errors::PredictionMarketError;
 
 pub fn withdraw_fees(ctx: Context<WithdrawFees>) -> Result<()> {
-    let platform_config = &ctx.accounts.platform_config;
+    let _platform_config = &ctx.accounts.platform_config;
     
     // Get the current balance of the treasury account
     let amount = ctx.accounts.treasury_token_account.amount;
@@ -14,12 +14,11 @@ pub fn withdraw_fees(ctx: Context<WithdrawFees>) -> Result<()> {
         PredictionMarketError::InsufficientLiquidity
     );
     
-    // Transfer tokens from treasury to admin using transfer_checked
-    let cpi_accounts = TransferChecked {
+    // Transfer tokens from treasury to admin
+    let cpi_accounts = Transfer {
         from: ctx.accounts.treasury_token_account.to_account_info(),
         to: ctx.accounts.admin_token_account.to_account_info(),
         authority: ctx.accounts.treasury_authority.to_account_info(),
-        mint: ctx.accounts.mint.to_account_info(),
     };
     
     // Create the CPI context with signer seeds for the treasury PDA
@@ -38,7 +37,7 @@ pub fn withdraw_fees(ctx: Context<WithdrawFees>) -> Result<()> {
     );
     
     // Execute the transfer
-    token::transfer_checked(cpi_ctx, amount, ctx.accounts.mint.decimals)?;
+    token::transfer(cpi_ctx, amount)?;
     
     msg!("Fees withdrawn: {}", amount);
     
@@ -58,7 +57,7 @@ pub struct WithdrawFees<'info> {
     pub admin: Signer<'info>,
     
     /// The mint of the token being used for fees
-    pub mint: Account<'info, token::Mint>,
+    pub mint: Account<'info, anchor_spl::token::Mint>,
     
     #[account(
         mut,
