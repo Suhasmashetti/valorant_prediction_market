@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use crate::state::outcome::Outcome;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MarketStatus {
