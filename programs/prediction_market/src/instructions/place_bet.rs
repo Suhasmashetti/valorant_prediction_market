@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, TokenAccount, Token, Transfer};
+use anchor_spl::token::{self, TokenAccount, Token};
 use crate::state::{Market, Outcome, UserPosition, MarketStatus};
 use crate::errors::PredictionMarketError;
 
